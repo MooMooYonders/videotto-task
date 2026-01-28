@@ -2,12 +2,17 @@ import React, { useState } from "react";
 import { ProcessingStatus } from "./enums/status";
 import type { ProcessingStatusValue } from "./enums/status";
 
+type JobResponse = {
+  jobId: string;
+  status: string;
+};
+
 function App() {
   const [videoUrl, setVideoUrl] = useState("");
   const [status, setStatus] = useState<ProcessingStatusValue>(ProcessingStatus.Idle);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
 
@@ -16,11 +21,34 @@ function App() {
       return;
     }
 
-    // For this minimum PR: simulate processing
+    // Call backend to create a processing job
     setStatus(ProcessingStatus.Processing);
-    setTimeout(() => {
-      setStatus(ProcessingStatus.Completed);
-    }, 1500);
+    try {
+      const response = await fetch("http://localhost:8000/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ videoUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data: JobResponse = await response.json();
+      // For now we only care that the backend accepted the job.
+      // Later we can store data.jobId and poll for real status.
+      if (data.status.toLowerCase() === "ok") {
+        setStatus(ProcessingStatus.Completed);
+      } else {
+        setStatus(ProcessingStatus.Failed);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to start video analysis. Please try again.");
+      setStatus(ProcessingStatus.Failed);
+    }
   };
 
   return (
@@ -32,7 +60,7 @@ function App() {
         <label>
           Video URL
           <input
-            type="url"
+            type="text"
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="https://www.dropbox.com/..."
