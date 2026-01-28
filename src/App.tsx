@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "./App.css";
 import { ProcessingStatus } from "./enums/status";
 import type { ProcessingStatusValue } from "./enums/status";
 
@@ -52,12 +53,27 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: 600, margin: "40px auto", fontFamily: "system-ui" }}>
+    <div
+      style={{
+        maxWidth: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        margin: "40px auto",
+        fontFamily: "system-ui",
+        textAlign: "center",
+      }}
+    >
       <h1>Videotto Clip Finder</h1>
       <p>Paste a video link to analyze its best clips.</p>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <label>
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", justifyContent: "center", alignItems: "center" }}
+      >
+        <label style={{ width: "100%" }}>
           Video URL
           <input
             type="text"
@@ -74,7 +90,11 @@ function App() {
           </div>
         )}
 
-        <button type="submit" style={{ padding: "8px 12px" }}>
+        <button
+          type="submit"
+          className="analyze-button"
+          style={{ padding: "8px 12px", width: "40%" }}
+        >
           Analyze Video
         </button>
       </form>
