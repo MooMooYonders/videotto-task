@@ -3,7 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
     image: videotto-backend
+    platform: linux/amd64
     ports:
       - "8000:8000"
     env_file:
