@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: videotto-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    # optional: keep tmp for agent frame extraction
+    # volumes:
+    #   - backend-tmp:/app/backend/tmp
+
+# volumes:
+#   backend-tmp:
