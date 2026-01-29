@@ -3,19 +3,19 @@ import uuid
 
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
-
-from fastapi import BackgroundTasks, FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional
-
 from .video import (
     download_video_from_dropbox,
     extract_audio,
     transcribe_with_whisper,
     llm_top_three_viral_clips,
 )
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional
 
 
 app = FastAPI(title="Videotto Backend")

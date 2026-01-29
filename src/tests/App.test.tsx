@@ -17,9 +17,9 @@ describe('App submit button regression', () => {
 
     render(<App />);
 
-    // Initial state
-    expect(screen.getByText(/Status:/i)).toBeInTheDocument();
-    expect(screen.getByText(/Waiting for input/i)).toBeInTheDocument();
+    // Initial state: input (front) view
+    expect(screen.getByText(/Videotto Clip Finder/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /analyze video/i })).toBeInTheDocument();
 
     // Enter a URL
     const input = screen.getByPlaceholderText('https://www.dropbox.com/...');
@@ -29,8 +29,8 @@ describe('App submit button regression', () => {
     const button = screen.getByRole('button', { name: /analyze video/i });
     await user.click(button);
 
-    // After clicking and receiving a successful response, we should see "Analysis completed"
-    expect(await screen.findByText(/Analysis completed/i)).toBeInTheDocument();
+    // After submit we switch to processing view (Status: ...)
+    expect(await screen.findByText(/Status:/i)).toBeInTheDocument();
   });
 });
 

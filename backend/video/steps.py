@@ -98,6 +98,13 @@ def transcribe_with_whisper(audio_path: Path, model_name: str = "base") -> List[
         text = (seg.get("text") or "").strip()
         if text:
             segments.append({"start": start, "end": end, "text": text})
+
+    # Write the trascript to tmp for inspection
+    transcript_path = ensure_temp_dir() / "transcript.txt"
+    with transcript_path.open("w", encoding="utf-8") as f:
+        for seg in segments:
+            f.write(f"[{seg['start']:.1f}s - {seg['end']:.1f}s] {seg['text']}\n")
+
     return segments
 
 
