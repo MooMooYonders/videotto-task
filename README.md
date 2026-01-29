@@ -126,3 +126,5 @@ Visit the demo at
 http://videotto-frontend-jinx.s3-website-ap-southeast-2.amazonaws.com/
 
 For best results, upload videos shorter than 1 minute to keep processing time reasonable.
+
+**Note:** S3 static website hosting is HTTP-only. If your browser forces HTTPS, the page may not load. Please paste the link exactly as http://... or run on desktop. In production I’d add CloudFront for HTTPS and mobile compatibility.
