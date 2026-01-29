@@ -36,6 +36,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+print("CORS_ORIGINS raw =", _cors_origins)
+print("CORS allow_origins list =", _cors_origins_list)
+
 
 # --- In-memory job store (id -> job dict) ---
 jobs: dict[str, dict] = {}
