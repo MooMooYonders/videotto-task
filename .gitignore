@@ -27,3 +27,9 @@ dist-ssr
 # virtual environment
 .venv
 .env
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
