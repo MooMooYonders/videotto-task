@@ -119,3 +119,10 @@ docker-compose.yaml # Build + run backend with .env
 - **Web app:** Backend deployed on AWS (e.g. EC2, App Runner); frontend can be run locally against that URL or hosted separately (e.g. S3 static site).
 - **Source code:** This GitHub repo.
 - **README:** This file – how clip-ranking works, tradeoffs and decisions, and what I’d improve with more time.
+
+
+**Try it out:**
+Visit the demo at
+http://videotto-frontend-jinx.s3-website-ap-southeast-2.amazonaws.com/
+
+For best results, upload videos shorter than 1 minute to keep processing time reasonable.
