@@ -1,6 +1,6 @@
 # Videotto Clip Finder
 
-A small system that takes a video (via Dropbox link), analyzes it, and returns the **top 3 clips** with start/end times and a short explanation for each. Built for the Videotto Engineering Internship Exercise.
+A small system that takes a video (via Dropbox link), analyses it, and returns the **top 3 clips** with start/end times and a short explanation for each. Built for the Videotto Engineering Internship Exercise.
 
 ## What it does
 
@@ -18,7 +18,7 @@ Clip selection is done by an **LLM agent** (LangGraph) with access to two tools:
 2. **`get_transcript(start, end)`** – Returns a textual analysis of the transcript for a time range (summary, key moments, virality rationale). The agent calls this for **segments that look interesting** from the frame analysis.
 
 The agent is prompted as a **viral clip analyst**: it scans the video visually, then uses the transcript where useful, and finally calls **`submit_top_clips`** once with exactly 3 clips. Each clip has:
-- **Start / end** in seconds (typically **5–8 seconds** for short-form virality).
+- **Start / end** in seconds (typically **2–3 seconds** for short-form virality).
 - **Reason** that must cite both what was **seen** (frames) and **heard** (transcript), and why the segment has viral potential.
 
 Viral criteria used in the prompt include: strong hook in the first 1–2 seconds, emotional punch (surprise, humor, tension), clarity without heavy context, visual novelty, and quick payoff. The agent is also told the **video duration** so it only requests ranges within the file and submits clips within bounds.
@@ -55,13 +55,12 @@ So ranking is **AI-assisted**: the LLM acts as judge using zero-shot reasoning o
 
 ### Backend (local)
 
+From **repo root** (so the `backend` package is importable):
+
 ```bash
-cd backend
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
-
-Run from **repo root** so the `backend` package is importable.
 
 ### Backend (Docker)
 
@@ -71,7 +70,7 @@ From repo root:
 docker compose up --build
 ```
 
-Backend will be at `http://localhost:8000`. Image is built for `linux/amd64` (e.g. for AWS x86).
+Backend will be at `http://localhost:8000`. The image is built for your host architecture (arm64 on M1/M2, amd64 on Intel/AMD).
 
 ### Frontend
 
@@ -84,7 +83,7 @@ Open `http://localhost:5173`. By default the app calls `http://localhost:8000`. 
 
 ```bash
 # In project root – create or edit .env (frontend)
-echo "VITE_API_BASE=https://k2y4qeuedn.ap-southeast-2.awsapprunner.com" >> .env
+echo "VITE_API_BASE=https://your-backend-url.awsapprunner.com" >> .env
 npm run dev
 ```
 
@@ -111,12 +110,12 @@ src/
     InputView.tsx   # Dropbox URL input
     ProcessingView.tsx  # Status + step message
     ResultView.tsx  # Top 3 clips as cards (thumbnail, start/end, rationale)
-Dockerfile          # Python 3.11, ffmpeg, backend only; amd64
+Dockerfile          # Python 3.11, ffmpeg, backend only
 docker-compose.yaml # Build + run backend with .env
 ```
 
 ## Deliverables
 
-- **Web app:** Backend deployed on AWS (EC2); frontend can be run locally against that URL or hosted separately.
+- **Web app:** Backend deployed on AWS (e.g. EC2, App Runner); frontend can be run locally against that URL or hosted separately (e.g. S3 static site).
 - **Source code:** This GitHub repo.
 - **README:** This file – how clip-ranking works, tradeoffs and decisions, and what I’d improve with more time.
