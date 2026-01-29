@@ -25,10 +25,12 @@ from typing import Optional
 
 app = FastAPI(title="Videotto Backend")
 
-# Allow requests from the local React dev server
+# CORS: allow frontend origin(s). Default localhost:5173; set CORS_ORIGINS for production (e.g. "https://your-app.vercel.app" or comma-separated).
+_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173")
+_cors_origins_list = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -80,12 +80,22 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. The app is configured to call `http://localhost:8000` for the API; change `API_BASE` in `src/App.tsx` if the backend is elsewhere (e.g. your AWS URL).
+Open `http://localhost:5173`. By default the app calls `http://localhost:8000`. To use your deployed backend (e.g. AWS App Runner), set the API base via env:
+
+```bash
+# In project root – create or edit .env (frontend)
+echo "VITE_API_BASE=https://k2y4qeuedn.ap-southeast-2.awsapprunner.com" >> .env
+npm run dev
+```
+
+Or add `VITE_API_BASE=<your-backend-url>` to `.env` (no trailing slash). Restart the dev server after changing.
+
+**CORS:** The backend allows `http://localhost:5173` by default. If you deploy the frontend to another origin (e.g. Vercel), set `CORS_ORIGINS` on the backend (e.g. `https://your-app.vercel.app` or comma-separated list).
 
 ### Environment
 
-- `OPENAI_API_KEY` – required for the agent and inner analysis LLMs.
-- Optional: `LANGCHAIN_TRACING_V2`, `LANGCHAIN_PROJECT`, `LANGCHAIN_API_KEY` for LangSmith tracing.
+- **Backend:** `OPENAI_API_KEY` – required. Optional: `LANGCHAIN_*` for tracing; `CORS_ORIGINS` for production frontend origin(s).
+- **Frontend:** `VITE_API_BASE` – backend URL when not using `http://localhost:8000`. See `.env.example`.
 
 ## Project structure
 

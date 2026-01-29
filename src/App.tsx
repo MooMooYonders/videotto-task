@@ -5,7 +5,8 @@ import type { ProcessingStatusValue } from "./enums/status";
 import type { Clip } from "./types";
 import { InputView, ProcessingView, ResultView } from "./views";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE =
+  import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 
 type JobResponse = {
   jobId: string;

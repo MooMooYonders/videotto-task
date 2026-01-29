@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
@@ -10,8 +11,7 @@ describe('App submit button regression', () => {
       status: 200,
       json: async () => ({ jobId: 'test-job-id', status: 'ok' }),
     } as Response);
-    // @ts-expect-error - assign to global in test environment
-    global.fetch = mockFetch;
+    global.fetch = mockFetch as typeof fetch;
 
     const user = userEvent.setup();
 
