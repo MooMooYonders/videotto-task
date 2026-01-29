@@ -1,5 +1,6 @@
 from pathlib import Path
 import uuid
+import os
 
 from dotenv import load_dotenv
 
@@ -8,9 +9,13 @@ from .video import (
     extract_audio,
     transcribe_with_whisper,
     run_viral_clips_agent,
+    extract_frames_as_base64,
 )
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+print("LANGCHAIN_TRACING_V2 =", os.environ.get("LANGCHAIN_TRACING_V2"))
+print("LANGCHAIN_PROJECT =", os.environ.get("LANGCHAIN_PROJECT"))
+print("LANGCHAIN_API_KEY present =", bool(os.environ.get("LANGCHAIN_API_KEY")))
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +54,7 @@ class ClipOut(BaseModel):
     reason: str
     start_frame: int
     end_frame: int
+    thumbnail: Optional[str] = None  # base64 JPEG for card preview
 
 
 class JobStatusResponse(BaseModel):
@@ -80,7 +86,17 @@ def run_pipeline_sync(job_id: str, video_url: str) -> None:
 
         job["status_message"] = "Identifying viral clips (agent)..."
         clips = run_viral_clips_agent(transcript, video_path, model="gpt-4o", max_rounds=20)
-        job["clips"] = [{"start": c["start"], "end": c["end"], "reason": c["reason"], "start_frame": c["start_frame"], "end_frame": c["end_frame"]} for c in clips]
+        job["clips"] = []
+        for c in clips:
+            b64_frames = extract_frames_as_base64(video_path, c["start"], c["end"], num_frames=1)
+            job["clips"].append({
+                "start": c["start"],
+                "end": c["end"],
+                "reason": c["reason"],
+                "start_frame": c["start_frame"],
+                "end_frame": c["end_frame"],
+                "thumbnail": b64_frames[0] if b64_frames else None,
+            })
         job["status"] = "completed"
         job["status_message"] = None
     except Exception as e:

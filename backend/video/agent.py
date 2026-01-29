@@ -391,7 +391,7 @@ Viral scoring (use both visuals and transcript in your reasoning):
 - Quick payoff
 
 Constraints:
-- Each clip should usually be about 5 - 8 seconds (viral short-form length); only go longer if the content strongly justifies it.
+- Each clip should usually be about 2 - 3 seconds (viral short-form length); only go longer if the content strongly justifies it.
 - For each clip, the reason MUST cite what you gathered from both the visual (frame) analysis and the transcript analysis, and why you think it has virality.
 - You will be told the video duration in seconds; you must only call get_frames and get_transcript with start and end within [0, that duration]. Submitted clips must also fall within that range.
 """
@@ -495,7 +495,7 @@ def run_viral_clips_agent(
                     f"Only use start and end within [0, {video_duration_s:.1f}] when calling get_frames or get_transcript. "
                     "First, scan the whole video by calling get_frames in sequence to build a visual overview from the frame analyses. "
                     "For any segments that look interesting, call get_transcript to get more context. "
-                    "Then, using the combined visual and transcript information, submit exactly 3 viral clips (typically 5 - 8 seconds each) with submit_top_clips, "
+                    "Then, using the combined visual and transcript information, submit exactly 3 viral clips (typically 2 - 3 seconds each) with submit_top_clips, "
                     "and in each clip's reason explain what you saw and heard and why it has viral potential."
                 )
             )

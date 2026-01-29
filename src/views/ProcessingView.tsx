@@ -5,7 +5,7 @@ const PROCESSING_STEPS = [
   "Downloading video...",
   "Extracting audio...",
   "Transcribing speech...",
-  "Identifying viral clips...",
+  "Identifying viral clips (agent)...",
 ] as const;
 
 export type ProcessingViewProps = {
