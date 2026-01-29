@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import array
+import base64
 import logging
 import math
 import os
@@ -9,7 +10,7 @@ import re
 import subprocess
 import sys
 import wave
-from typing import TypedDict, List, Tuple, Optional
+from typing import Any, List, Optional, Tuple, TypedDict
 
 import requests
 import whisper
@@ -212,6 +213,117 @@ def get_video_fps(video_path: Path) -> float:
         return 30.0
 
 
+def get_transcript_for_range(
+    start_s: float,
+    end_s: float,
+    transcript_segments: List[TranscriptSegment],
+) -> str:
+    """
+    Return transcript text for the given time range [start_s, end_s].
+    Includes any segment that overlaps the range.
+    """
+    lines: List[str] = []
+    for seg in transcript_segments:
+        if seg["end"] <= start_s or seg["start"] >= end_s:
+            continue
+        lines.append(f"[{seg['start']:.1f}s - {seg['end']:.1f}s] {seg['text']}")
+    return "\n".join(lines) if lines else "(No transcript in this range.)"
+
+
+def extract_frames_as_base64(
+    video_path: Path,
+    start_s: float,
+    end_s: float,
+    num_frames: int = 8,
+) -> List[str]:
+    """
+    Extract evenly spaced frames from the video in [start_s, end_s].
+    Returns a list of base64-encoded JPEG strings (data URL payload only, no prefix).
+    Uses a single ffmpeg call when num_frames > 1.
+    """
+    if not video_path.exists():
+        return []
+    # Edge case: start must be < end
+    if start_s >= end_s:
+        LOGGER.warning("extract_frames_as_base64: start (%.2f) >= end (%.2f), returning empty", start_s, end_s)
+        return []
+    duration = end_s - start_s
+    num_frames = max(1, min(32, num_frames))
+    result: List[str] = []
+
+    if num_frames == 1:
+        try:
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-ss",
+                str(start_s),
+                "-i",
+                str(video_path),
+                "-vframes",
+                "1",
+                "-f",
+                "image2",
+                "-c:v",
+                "mjpeg",
+                "pipe:1",
+            ]
+            out = subprocess.run(cmd, check=True, capture_output=True, timeout=15)
+            if out.stdout:
+                result.append(base64.standard_b64encode(out.stdout).decode("ascii"))
+        except Exception as e:
+            LOGGER.warning("extract_frames_as_base64 (single frame) failed: %s", e)
+        return result
+
+    # Multiple frames: one ffmpeg call, output to temp files then read
+    frames_dir = ensure_temp_dir() / "agent_frames"
+    frames_dir.mkdir(exist_ok=True)
+    # Unique pattern so concurrent calls don't overwrite (pid + timestamps)
+    pattern = f"frm_{os.getpid()}_{start_s:.1f}_{end_s:.1f}_%04d.jpg"
+    out_pattern = str(frames_dir / pattern)
+    try:
+        # fps = num_frames/duration gives that many frames over the segment; -vframes caps output
+        fps_val = num_frames / duration if duration > 0 else 1
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-ss",
+            str(start_s),
+            "-i",
+            str(video_path),
+            "-t",
+            str(duration),
+            "-vf",
+            f"fps={fps_val:.4f}",
+            "-vframes",
+            str(num_frames),
+            "-f",
+            "image2",
+            "-c:v",
+            "mjpeg",
+            out_pattern,
+        ]
+        subprocess.run(cmd, check=True, capture_output=True, timeout=30)
+        # Glob the actual outputs (ffmpeg writes frm_PID_start_end_0000.jpg, ...)
+        for p in sorted(frames_dir.glob(f"frm_{os.getpid()}_{start_s:.1f}_{end_s:.1f}_*.jpg")):
+            try:
+                data = p.read_bytes()
+                if data:
+                    result.append(base64.standard_b64encode(data).decode("ascii"))
+            except Exception as e:
+                LOGGER.warning("extract_frames_as_base64 read %s: %s", p, e)
+            try:
+                p.unlink()
+            except OSError:
+                pass
+    except subprocess.CalledProcessError as e:
+        err = getattr(e, "stderr", None) or getattr(e, "output", None) or str(e)
+        LOGGER.warning("extract_frames_as_base64 ffmpeg failed: %s", err)
+    except Exception as e:
+        LOGGER.warning("extract_frames_as_base64 failed: %s", e)
+    return result
+
+
 class ClipWithFrames(TypedDict):
     start: float
     end: float
@@ -261,6 +373,30 @@ def llm_top_three_viral_clips(
         return []
     fps = get_video_fps(video_path) if video_path and video_path.exists() else 30.0
     return segments_to_clips_with_frames(segments, fps)
+
+
+# --- Agentic viral-clip selection (LangGraph in video/agent.py) ---
+
+def run_viral_clips_agent(
+    transcript_segments: List[TranscriptSegment],
+    video_path: Path,
+    api_key: Optional[str] = None,
+    model: str = "gpt-4o",
+    max_rounds: int = 25,
+) -> List[ClipWithFrames]:
+    """
+    Run the LangGraph agent (get_frames + get_transcript + submit_top_clips).
+    See video/agent.py for the graph and tools.
+    """
+    from .agent import run_viral_clips_agent as _run
+
+    return _run(
+        transcript_segments=transcript_segments,
+        video_path=video_path,
+        api_key=api_key,
+        model=model,
+        max_rounds=max_rounds,
+    )
 
 
 def detect_speech_segments(audio_path: Path, noise_db: int = -30, min_silence: float = 0.4) -> List[TranscriptSegment]:

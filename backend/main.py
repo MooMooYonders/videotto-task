@@ -7,7 +7,7 @@ from .video import (
     download_video_from_dropbox,
     extract_audio,
     transcribe_with_whisper,
-    llm_top_three_viral_clips,
+    run_viral_clips_agent,
 )
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
@@ -78,8 +78,8 @@ def run_pipeline_sync(job_id: str, video_url: str) -> None:
             job["error"] = "No transcript produced (empty or Whisper failed)."
             return
 
-        job["status_message"] = "Identifying viral clips..."
-        clips = llm_top_three_viral_clips(transcript, video_path=video_path)
+        job["status_message"] = "Identifying viral clips (agent)..."
+        clips = run_viral_clips_agent(transcript, video_path, model="gpt-4o", max_rounds=20)
         job["clips"] = [{"start": c["start"], "end": c["end"], "reason": c["reason"], "start_frame": c["start_frame"], "end_frame": c["end_frame"]} for c in clips]
         job["status"] = "completed"
         job["status_message"] = None
